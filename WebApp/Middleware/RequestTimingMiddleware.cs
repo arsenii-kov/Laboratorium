@@ -23,6 +23,7 @@ public class RequestTimingMiddleware
 
         Stopwatch sw = Stopwatch.StartNew();
         long n = stats.Hit();
+        stats.RecordPath(ctx.Request.Path.ToString());
 
         Task AddHeaders()
         {

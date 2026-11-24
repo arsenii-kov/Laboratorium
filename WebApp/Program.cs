@@ -49,6 +49,11 @@ app.MapControllerRoute(
     defaults: new { controller = "Home", action = "Docs" });
 
 app.MapControllerRoute(
+    name: "books-archive",
+    pattern: "archive/{year:int}/{month:int:range(1,12)}",
+    defaults: new { controller = "Book", action = "Archive" });
+
+app.MapControllerRoute(
     name: "admin-area",
     pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}");
 

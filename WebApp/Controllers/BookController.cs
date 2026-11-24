@@ -5,7 +5,9 @@ using WebApp.Models;
 
 namespace WebApp.Controllers;
 
-[ServiceFilter(typeof(LogActionFilter))]
+[ServiceFilter(typeof(LogActionFilter), Order = 1)]
+[MeasureTime(Order = 2)]
+[SecondActionFilter(Order = 3)]
 public class BookController : Controller
 {
     // LAB 1
@@ -171,6 +173,21 @@ public class BookController : Controller
         }
 
         return RedirectToAction("Details", new { id = foundBook.Id });
+    }
+
+    public IActionResult Archive(int year, int month)
+    {
+        List<Book> result = new List<Book>();
+        foreach (Book book in BookStoreMemory.Books)
+        {
+            if (book.PublicationDate.HasValue && book.PublicationDate.Value.Year == year)
+            {
+                result.Add(book);
+            }
+        }
+
+        ViewData["Title"] = "Archiwum: " + month + "/" + year;
+        return View("Index", result);
     }
 
     public IActionResult Boom()
