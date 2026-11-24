@@ -21,6 +21,21 @@ app.UseAuthorization();
 app.MapStaticAssets();
 
 app.MapControllerRoute(
+    name: "books-by-year",
+    pattern: "books/year/{year:int:min(1450)}",
+    defaults: new { controller = "Book", action = "ByYear" });
+
+app.MapControllerRoute(
+    name: "books-by-isbn",
+    pattern: "books/isbn/{isbn:regex(^\\d{{13}}$)}",
+    defaults: new { controller = "Book", action = "ByIsbn" });
+
+app.MapControllerRoute(
+    name: "docs",
+    pattern: "docs/{*path}",
+    defaults: new { controller = "Home", action = "Docs" });
+
+app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
