@@ -1,0 +1,28 @@
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<h2>Panel administracyjny</h2>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Książki</h5>
+                <p class="card-text display-6">@ViewBag.BooksCount</p>
+                <a asp-area="" asp-controller="Book" asp-action="Index" class="btn btn-primary btn-sm">Lista książek</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Autorzy</h5>
+                <p class="card-text display-6">@ViewBag.AuthorsCount</p>
+                <a asp-area="Admin" asp-controller="Authors" asp-action="Index" class="btn btn-primary btn-sm">Zarządzaj autorami</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<a asp-area="" asp-controller="Home" asp-action="Index" class="btn btn-secondary">Powrót do strony głównej</a>
