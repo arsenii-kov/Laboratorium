@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Text;
+using WebApp.Filters;
 using WebApp.Models;
 
 namespace WebApp.Controllers;
 
+[ServiceFilter(typeof(LogActionFilter))]
 public class BookController : Controller
 {
     // LAB 1
@@ -169,5 +171,10 @@ public class BookController : Controller
         }
 
         return RedirectToAction("Details", new { id = foundBook.Id });
+    }
+
+    public IActionResult Boom()
+    {
+        throw new InvalidOperationException("Celowy wyjątek");
     }
 }

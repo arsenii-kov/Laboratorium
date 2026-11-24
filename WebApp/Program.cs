@@ -1,10 +1,16 @@
+using Microsoft.AspNetCore.Mvc;
+using WebApp.Filters;
 using WebApp.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(delegate (MvcOptions options)
+{
+    options.Filters.Add<GlobalExceptionFilter>();
+});
 builder.Services.AddSingleton<RequestStats>();
+builder.Services.AddScoped<LogActionFilter>();
 
 var app = builder.Build();
 
