@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using WebApp.Middleware;
 using WebApp.Models;
+using WebApp.Services;
 
 namespace WebApp.Areas.Admin.Controllers;
 
@@ -8,15 +9,17 @@ namespace WebApp.Areas.Admin.Controllers;
 public class DashboardController : Controller
 {
     private readonly RequestStats _stats;
+    private readonly IBookService _books;
 
-    public DashboardController(RequestStats stats)
+    public DashboardController(RequestStats stats, IBookService books)
     {
         _stats = stats;
+        _books = books;
     }
 
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        ViewBag.BooksCount = BookStoreMemory.Books.Count;
+        ViewBag.BooksCount = await _books.GetCountAsync();
         ViewBag.AuthorsCount = AuthorStoreMemory.Authors.Count;
         ViewBag.TotalRequests = _stats.Total;
         ViewBag.TopPaths = _stats.GetTopPaths(5);

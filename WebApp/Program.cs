@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using WebApp.Data;
 using WebApp.Filters;
 using WebApp.Middleware;
+using WebApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseStaticWebAssets();
@@ -18,6 +19,7 @@ builder.Services.AddControllersWithViews(delegate (MvcOptions options)
 });
 builder.Services.AddSingleton<RequestStats>();
 builder.Services.AddScoped<LogActionFilter>();
+builder.Services.AddScoped<IBookService, BookService>();
 
 var app = builder.Build();
 
