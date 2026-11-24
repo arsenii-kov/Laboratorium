@@ -73,6 +73,7 @@ public class BookController : Controller
         return View(BookStoreMemory.Books);
     }
 
+    [HttpGet("Book/Details/{id:int}")]
     public IActionResult Details(int id)
     {
         Book? foundBook = null;
