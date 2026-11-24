@@ -22,6 +22,8 @@
 | `/Book/Details/{id:int}` | Book.Details | GET |
 | `/Book/Create` | Book.Create | GET |
 | `/Book/Create` | Book.Create | POST |
+| `/Book/Edit/{id?}` | Book.Edit | GET / POST |
+| `/Book/Delete/{id?}` | Book.Delete | GET / POST |
 | `/books/year/{year:int:min(1450)}` | Book.ByYear | ANY |
 | `/books/isbn/{isbn:regex(^\d{13}$)}` | Book.ByIsbn | ANY |
 | `/archive/{year:int}/{month:int:range(1,12)}` | Book.Archive | ANY |
