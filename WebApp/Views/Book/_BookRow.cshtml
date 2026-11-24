@@ -4,4 +4,9 @@
     <td>@Model.Author</td>
     <td>@Model.PublicationDate?.Year</td>
     <td>@Model.Price.ToString("C")</td>
+    <td>
+        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-info">Szczegóły</a>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-warning">Edytuj</a>
+        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-danger">Usuń</a>
+    </td>
 </tr>

@@ -1,4 +1,4 @@
-﻿@model List<WebApp.Models.Book>
+﻿@model WebApp.Models.PagedResult<WebApp.Models.Book>
 
 @section Styles {
     <style>
@@ -6,20 +6,67 @@
     </style>
 }
 
-<h2>@(ViewData["Title"] != null ? ViewData["Title"] : "Książki")</h2>
-<a asp-action="Create" class="btn btn-primary mb-3">+ Dodaj książkę</a>
+@{
+    string currentSort = ViewBag.Sort as string ?? "title";
+    string currentDir = ViewBag.Dir as string ?? "asc";
+    string nextTitleDir = (currentSort == "title" && currentDir == "asc") ? "desc" : "asc";
+    string nextDateDir = (currentSort == "date" && currentDir == "asc") ? "desc" : "asc";
+    string nextPriceDir = (currentSort == "price" && currentDir == "asc") ? "desc" : "asc";
+}
 
-<table class="table">
+<h2>@(ViewData["Title"] != null ? ViewData["Title"] : "Książki")</h2>
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <a asp-action="Create" class="btn btn-primary">+ Dodaj książkę</a>
+
+    <form asp-action="Index" method="get" class="d-flex gap-2">
+        <input type="text" name="search" value="@ViewBag.Search" class="form-control" placeholder="Szukaj po tytule lub ISBN..." />
+        <input type="hidden" name="pageSize" value="@Model.PageSize" />
+        <input type="hidden" name="sort" value="@ViewBag.Sort" />
+        <input type="hidden" name="dir" value="@ViewBag.Dir" />
+        <button type="submit" class="btn btn-outline-primary">Szukaj</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Wyczyść</a>
+    </form>
+</div>
+
+<table class="table table-striped">
     <thead>
-    <tr><th>Tytuł</th><th>Autor</th><th>Rok</th><th>Cena</th></tr>
+        <tr>
+            <th>
+                <a asp-action="Index" asp-route-page="1" asp-route-pageSize="@Model.PageSize" asp-route-search="@ViewBag.Search" asp-route-sort="title" asp-route-dir="@nextTitleDir">Tytuł</a>
+            </th>
+            <th>Autor</th>
+            <th>
+                <a asp-action="Index" asp-route-page="1" asp-route-pageSize="@Model.PageSize" asp-route-search="@ViewBag.Search" asp-route-sort="date" asp-route-dir="@nextDateDir">Rok</a>
+            </th>
+            <th>
+                <a asp-action="Index" asp-route-page="1" asp-route-pageSize="@Model.PageSize" asp-route-search="@ViewBag.Search" asp-route-sort="price" asp-route-dir="@nextPriceDir">Cena</a>
+            </th>
+            <th>Akcje</th>
+        </tr>
     </thead>
     <tbody>
-    @foreach (var b in Model)
-    {
-        <partial name="_BookRow" model="b" />
-    }
+        @foreach (var b in Model.Items)
+        {
+            <partial name="_BookRow" model="b" />
+        }
     </tbody>
 </table>
+
+@if (Model.TotalPages > 1)
+{
+    <nav aria-label="Stronicowanie">
+        <ul class="pagination">
+            @for (int p = 1; p <= Model.TotalPages; p++)
+            {
+                string activeClass = p == Model.Page ? "active" : "";
+                <li class="page-item @activeClass">
+                    <a class="page-link" asp-action="Index" asp-route-page="@p" asp-route-pageSize="@Model.PageSize" asp-route-search="@ViewBag.Search" asp-route-sort="@ViewBag.Sort" asp-route-dir="@ViewBag.Dir">@p</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}
 
 @section Scripts {
     <script>

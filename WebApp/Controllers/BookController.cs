@@ -2,6 +2,7 @@
 using System.Text;
 using WebApp.Filters;
 using WebApp.Models;
+using WebApp.Services;
 
 namespace WebApp.Controllers;
 
@@ -10,6 +11,13 @@ namespace WebApp.Controllers;
 [SecondActionFilter(Order = 3)]
 public class BookController : Controller
 {
+    private readonly IBookService _books;
+
+    public BookController(IBookService books)
+    {
+        _books = books;
+    }
+
     // LAB 1
 
     public IActionResult Hello()
@@ -70,32 +78,27 @@ public class BookController : Controller
         return Json(new { status = "ok", time = DateTime.Now });
     }
 
-    // LAB 2
+    // LAB 4 - pełny CRUD + stronicowanie + wyszukiwanie + sortowanie
 
-    public IActionResult Index()
+    public async Task<IActionResult> Index(int page = 1, int pageSize = 5, string? search = null, string? sort = null, string? dir = null)
     {
-        return View(BookStoreMemory.Books);
+        PagedResult<Book> result = await _books.GetPageAsync(page, pageSize, search, sort, dir);
+        ViewBag.Search = search;
+        ViewBag.Sort = sort;
+        ViewBag.Dir = dir;
+        ViewBag.PageSize = pageSize;
+        return View(result);
     }
 
     [HttpGet("Book/Details/{id:int}")]
-    public IActionResult Details(int id)
+    public async Task<IActionResult> Details(int id)
     {
-        Book? foundBook = null;
-        foreach (Book book in BookStoreMemory.Books)
-        {
-            if (book.Id == id)
-            {
-                foundBook = book;
-                break;
-            }
-        }
-
-        if (foundBook == null)
+        Book? book = await _books.GetByIdAsync(id);
+        if (book == null)
         {
             return NotFound();
         }
-
-        return View(foundBook);
+        return View(book);
     }
 
     [HttpGet]
@@ -105,25 +108,20 @@ public class BookController : Controller
     }
 
     [HttpPost]
-    public IActionResult Create(BookFormViewModel vm)
+    public async Task<IActionResult> Create(BookFormViewModel vm)
     {
+        if (await _books.IsbnExistsAsync(vm.Isbn, null))
+        {
+            ModelState.AddModelError("Isbn", "Książka o podanym numerze ISBN już istnieje.");
+        }
+
         if (!ModelState.IsValid)
         {
             return View(vm);
         }
 
-        int maxId = 0;
-        foreach (Book b in BookStoreMemory.Books)
-        {
-            if (b.Id > maxId)
-            {
-                maxId = b.Id;
-            }
-        }
-
         Book newBook = new Book
         {
-            Id = maxId + 1,
             Title = vm.Title,
             Isbn = vm.Isbn,
             PublicationDate = vm.PublicationDate,
@@ -131,42 +129,114 @@ public class BookController : Controller
             Price = vm.Price,
             Author = vm.Author
         };
-        BookStoreMemory.Books.Add(newBook);
+
+        await _books.AddAsync(newBook);
 
         TempData["Success"] = $"Dodano książkę „{vm.Title}”.";
         return RedirectToAction(nameof(Index));
     }
 
-    // LAB 3 - Część A
-
-    public IActionResult ByYear(int year)
+    [HttpGet]
+    public async Task<IActionResult> Edit(int id)
     {
-        List<Book> result = new List<Book>();
-        foreach (Book book in BookStoreMemory.Books)
+        Book? book = await _books.GetByIdAsync(id);
+        if (book == null)
         {
-            if (book.PublicationDate.HasValue && book.PublicationDate.Value.Year == year)
-            {
-                result.Add(book);
-            }
+            return NotFound();
         }
 
-        ViewData["Title"] = "Książki z roku " + year;
-        return View("Index", result);
+        BookFormViewModel vm = new BookFormViewModel
+        {
+            Id = book.Id,
+            Title = book.Title,
+            Isbn = book.Isbn,
+            PublicationDate = book.PublicationDate,
+            NumPages = book.NumPages,
+            Price = book.Price,
+            Author = book.Author
+        };
+
+        return View(vm);
     }
 
-    public IActionResult ByIsbn(string isbn)
+    [HttpPost]
+    public async Task<IActionResult> Edit(int id, BookFormViewModel vm)
     {
-        Book? foundBook = null;
-        foreach (Book book in BookStoreMemory.Books)
+        if (id != vm.Id)
         {
-            string normalized = book.Isbn.Replace("-", "").Replace(" ", "");
-            if (normalized == isbn)
-            {
-                foundBook = book;
-                break;
-            }
+            return BadRequest();
         }
 
+        if (await _books.IsbnExistsAsync(vm.Isbn, id))
+        {
+            ModelState.AddModelError("Isbn", "Inna książka ma już ten numer ISBN.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return View(vm);
+        }
+
+        Book book = new Book
+        {
+            Id = vm.Id,
+            Title = vm.Title,
+            Isbn = vm.Isbn,
+            PublicationDate = vm.PublicationDate,
+            NumPages = vm.NumPages,
+            Price = vm.Price,
+            Author = vm.Author
+        };
+
+        bool updated = await _books.UpdateAsync(book);
+        if (!updated)
+        {
+            return NotFound();
+        }
+
+        TempData["Success"] = $"Zaktualizowano książkę „{vm.Title}”.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Delete(int id)
+    {
+        Book? book = await _books.GetByIdAsync(id);
+        if (book == null)
+        {
+            return NotFound();
+        }
+
+        return View(book);
+    }
+
+    [HttpPost, ActionName("Delete")]
+    public async Task<IActionResult> DeleteConfirmed(int id)
+    {
+        bool deleted = await _books.DeleteAsync(id);
+        if (!deleted)
+        {
+            return NotFound();
+        }
+
+        TempData["Success"] = "Usunięto książkę.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    // LAB 3
+
+    public async Task<IActionResult> ByYear(int year)
+    {
+        List<Book> books = await _books.GetByYearAsync(year);
+        int size = books.Count > 0 ? books.Count : 1;
+        PagedResult<Book> paged = new PagedResult<Book>(books, 1, size, books.Count);
+        ViewData["Title"] = "Książki z roku " + year;
+        return View("Index", paged);
+    }
+
+    public async Task<IActionResult> ByIsbn(string isbn)
+    {
+        Book? foundBook = await _books.GetByIsbnAsync(isbn);
         if (foundBook == null)
         {
             return NotFound();
@@ -175,19 +245,13 @@ public class BookController : Controller
         return RedirectToAction("Details", new { id = foundBook.Id });
     }
 
-    public IActionResult Archive(int year, int month)
+    public async Task<IActionResult> Archive(int year, int month)
     {
-        List<Book> result = new List<Book>();
-        foreach (Book book in BookStoreMemory.Books)
-        {
-            if (book.PublicationDate.HasValue && book.PublicationDate.Value.Year == year)
-            {
-                result.Add(book);
-            }
-        }
-
+        List<Book> books = await _books.GetByYearAsync(year);
+        int size = books.Count > 0 ? books.Count : 1;
+        PagedResult<Book> paged = new PagedResult<Book>(books, 1, size, books.Count);
         ViewData["Title"] = "Archiwum: " + month + "/" + year;
-        return View("Index", result);
+        return View("Index", paged);
     }
 
     public IActionResult Boom()
