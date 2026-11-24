@@ -94,6 +94,37 @@ public class HomeController : Controller
         return View(routes);
     }
 
+    public IActionResult HttpStatus(int code)
+    {
+        Response.StatusCode = code;
+
+        string message;
+        switch (code)
+        {
+            case 404:
+                message = "Nie znaleziono strony lub zasobu.";
+                break;
+            case 403:
+                message = "Brak uprawnień do tego zasobu.";
+                break;
+            case 401:
+                message = "Wymagane logowanie.";
+                break;
+            default:
+                message = "Serwer zwrócił kod błędu.";
+                break;
+        }
+
+        ErrorViewModel vm = new ErrorViewModel
+        {
+            Code = code,
+            Message = message,
+            RequestId = HttpContext.TraceIdentifier
+        };
+
+        return View(vm);
+    }
+
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {

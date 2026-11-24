@@ -1,0 +1,9 @@
+@model WebApp.Models.ErrorViewModel
+@{
+    ViewData["Title"] = "Błąd " + Model.Code;
+}
+
+<h1 class="text-danger">Błąd @Model.Code</h1>
+<p class="lead">@Model.Message</p>
+<p class="text-muted">Identyfikator żądania: <code>@Model.RequestId</code></p>
+<a asp-area="" asp-controller="Home" asp-action="Index" class="btn btn-primary">Strona główna</a>
