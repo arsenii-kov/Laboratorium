@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using WebApp.Data;
 using WebApp.Filters;
 using WebApp.Middleware;
 
@@ -6,6 +8,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseStaticWebAssets();
 
 // Add services to the container.
+builder.Services.AddDbContext<AppDbContext>(delegate (DbContextOptionsBuilder options)
+{
+    options.UseSqlite(builder.Configuration.GetConnectionString("Default"));
+});
 builder.Services.AddControllersWithViews(delegate (MvcOptions options)
 {
     options.Filters.Add<GlobalExceptionFilter>();
